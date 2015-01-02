@@ -155,6 +155,7 @@ namespace ATC
 		public bool stationContacted = false;
 		public bool flightPermission = false;
 		public bool landingPermission = false;
+		public bool hasBeenToSpace = false;
 		public bool transferring = false;
 		public FlightPlan plan = new FlightPlan ();
 		
@@ -406,6 +407,9 @@ namespace ATC
 			}
 			if (isWindowOpen == true)
 			{
+				if (FlightGlobals.ActiveVessel.altitude > 69200) {
+					hasBeenToSpace = true;
+				}
 				GUILayout.BeginVertical();
 				GUILayout.Label(message4, who4 ? whiteStyle : yellowStyle);
 				GUILayout.Label(message3, who3 ? whiteStyle : yellowStyle);
@@ -840,6 +844,24 @@ namespace ATC
 								stationContacted = true;
 							}
 						} else {
+							if (hasBeenToSpace) {
+								flightPermission = true;
+								if (FlightGlobals.ActiveVessel.altitude < 50000) {
+									if (!transferring) {
+										postMessage(Callsign+", contact "+central.name+" on "+central.frequency+".", false);
+										startTimeout("NUL", 200);
+										transferring = true;
+									} else {
+										if (GUILayout.Button("Tune "+central.name+" on "+central.frequency.ToString())) {
+											postMessage("Going to "+central.frequency+", "+Callsign+".", true);
+											station = centralStation;
+											section = central;
+											transferring = false;
+											stationContacted = false;
+										}
+									}
+								}
+							}
 							if (!flightPermission) {
 								if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH) {
 									if (GUILayout.Button("Request launch clearance")) {
@@ -849,7 +871,11 @@ namespace ATC
 										timer = 700;
 										startTimeout("RLU", 250);
 									}
-								} else {
+								} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
+									postMessage(Callsign+", you were not cleared to take off.", false);
+									Reputation.Instance.AddReputation(-50,TransactionReasons.Any);
+									flightPermission = true;
+								} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED) {
 									if (GUILayout.Button("Request takeoff clearance")) {
 										contactStation();
 										flightPermission = true;

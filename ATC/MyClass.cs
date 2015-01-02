@@ -586,7 +586,7 @@ namespace ATC
 						}
 				    } else if (section.type==ATCclass.Ground) {
 						if (!planning) {
-							if (station.tower != null) {
+							if (station.tower != null && ((plan.type != FlightPlanType.Orbital && plan.type != FlightPlanType.Suborbital) || FlightGlobals.ActiveVessel.situation != Vessel.Situations.PRELAUNCH)) {
 								if (GUILayout.Button("Tune "+station.tower.name+" on "+station.tower.frequency.ToString())) {
 									section = station.tower;
 									stationContacted = true;
@@ -601,7 +601,7 @@ namespace ATC
 									}
 								}
 							}
-							if (station.space_center != null) {
+							if (station.space_center != null && plan.type != FlightPlanType.HighAltitude && plan.type != FlightPlanType.LowAltitude) {
 								if (GUILayout.Button("Tune "+station.space_center.name+" on "+station.space_center.frequency.ToString())) {
 									section = station.space_center;
 									stationContacted = true;

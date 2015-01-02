@@ -334,14 +334,18 @@ namespace ATC
 			if (planning) {
 				GUILayout.Label("Select destination:");
 				GUILayout.BeginHorizontal();
-				currentNameText = GUILayout.TextField(currentNameText, GUILayout.MinWidth(30.0F));
-				currentCodeText = GUILayout.TextField(currentCodeText, GUILayout.MinWidth(30.0F)).ToUpper();
+				GUILayout.Label("Name:",GUILayout.ExpandWidth(false));
+				currentNameText = GUILayout.TextField(currentNameText, GUILayout.MinWidth(30.0F), GUILayout.ExpandWidth(true));
+				GUILayout.Label(" | Airport code:", GUILayout.ExpandWidth(false));
+				currentCodeText = GUILayout.TextField(currentCodeText, GUILayout.Width(40.0F)).ToUpper();
 				GUILayout.EndHorizontal();
 				if (currentCodeText.Length>3) {
 					currentCodeText = currentCodeText.Substring(0,3);
 				}
 				foreach(Station s in airports) {
-					if ((currentCodeText.Length>0 && s.code.Contains(currentCodeText)) || (currentNameText.Length>0 && s.name.ToLower().Contains(currentNameText.ToLower()))) {
+					if ((currentCodeText.Length>0 && s.code.Contains(currentCodeText)) ||
+					    (currentNameText.Length>0 && s.name.ToLower().Contains(currentNameText.ToLower())) ||
+					    (currentCodeText.Length==0 && currentNameText.Length==0)) {
 						if (GUILayout.Button(s.name+" ("+s.code+")")) {
 							plan.destination = s;
 							planning = false;

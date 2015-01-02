@@ -529,7 +529,7 @@ namespace ATC
 										startTimeout("RTC", 250);
 									}
 								}
-								if (station.ground==null && plan.type == FlightPlanType.None) {
+								if (station.ground==null && plan.type == FlightPlanType.None && !planning) {
 									doFlightPlanGUI();
 								}
 							}
@@ -574,7 +574,27 @@ namespace ATC
 								}
 							}
 						}
-						doFlightPlanGUI();
+						if (plan.type == FlightPlanType.None || planning) {
+							doFlightPlanGUI();
+						} else {
+							if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+								if (GUILayout.Button("Request cruising altitude increase")) {
+									postMessage(section.name+", "+Callsign+" would like to increase cruising altitude.", true);
+									startTimeout("RCI",200);
+									plan.altitude += 1000;
+								}
+								if (GUILayout.Button("Request cruising altitude decrease")) {
+									postMessage(section.name+", "+Callsign+" would like to decrease cruising altitude.", true);
+									startTimeout("RCD",200);
+									plan.altitude -= 1000;
+								}
+							}
+							if (GUILayout.Button("Cancel flight plan")) {
+								postMessage(section.name+", this is "+Callsign+", we’d like to cancel our flight plan.",true);
+								plan.type = FlightPlanType.None;
+								startTimeout("CFP", 300);
+							}
+						}
 						if (!planning) {
 							if (GUILayout.Button("Request taxi to parking")) {
 								postMessage(section.name+", "+Callsign+". Request taxi to parking.", true);
@@ -860,6 +880,12 @@ namespace ATC
 					} else if (plan.type == FlightPlanType.Orbital) {
 						postMessage(Callsign+", you have been filed for an ascent to orbit.", false);
 					}
+				} else if (action == "RCI") {
+					postMessage(Callsign + ", cruising altitude increased to "+plan.altitude, false);
+				} else if (action == "RCD") {
+					postMessage(Callsign + ", cruising altitude decreased to "+plan.altitude, false);
+				} else if (action == "CFP") {
+					postMessage("Ok, "+Callsign+", we’ve cancelled your flight plan.", false);
 				}
 			} else if (section.type == ATCclass.Tower) {
 				if (action == "RTC") {

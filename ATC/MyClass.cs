@@ -117,6 +117,15 @@ namespace ATC
 		}
 	}
 
+	public class SortByDistance : IComparer<Station>
+	{
+		public int Compare(Station x, Station y)
+		{
+			int compareDistance = x.distance().CompareTo(y.distance());
+			return compareDistance;
+		}
+	}
+
 	public class FlightPlan
 	{
 		public FlightPlanType type;
@@ -170,6 +179,8 @@ namespace ATC
 
 		private string currentNameText = "";
 		private string currentCodeText = "";
+
+		private IComparer<Station> distanceComparer = new SortByDistance ();
 
 		int windGUIID;
 
@@ -333,19 +344,28 @@ namespace ATC
 			return central;
 		}
 
-		void doFlightPlanGUI () {
+		void doFlightPlanGUI (bool nearest_only = false) {
 			if (planning) {
 				GUILayout.Label("Select destination:");
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Name:",GUILayout.ExpandWidth(false));
-				currentNameText = GUILayout.TextField(currentNameText, GUILayout.MinWidth(30.0F), GUILayout.ExpandWidth(true));
-				GUILayout.Label(" | Airport code:", GUILayout.ExpandWidth(false));
-				currentCodeText = GUILayout.TextField(currentCodeText, GUILayout.Width(40.0F)).ToUpper();
-				GUILayout.EndHorizontal();
-				if (currentCodeText.Length>3) {
-					currentCodeText = currentCodeText.Substring(0,3);
+				if (!nearest_only) {
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Name:",GUILayout.ExpandWidth(false));
+					currentNameText = GUILayout.TextField(currentNameText, GUILayout.MinWidth(30.0F), GUILayout.ExpandWidth(true));
+					GUILayout.Label(" | Airport code:", GUILayout.ExpandWidth(false));
+					currentCodeText = GUILayout.TextField(currentCodeText, GUILayout.Width(40.0F)).ToUpper();
+					GUILayout.EndHorizontal();
+					if (currentCodeText.Length>3) {
+						currentCodeText = currentCodeText.Substring(0,3);
+					}
+				} else {
+					if (GUILayout.Button("Cancel")) {
+						plan.type = FlightPlanType.None;
+						planning = false;
+					}
 				}
+				airports.Sort(distanceComparer);
 				foreach(Station s in airports) {
+					if (nearest_only && s.distance() > 250000) break;
 					if ((currentCodeText.Length>0 && s.code.Contains(currentCodeText)) ||
 					    (currentNameText.Length>0 && s.name.ToLower().Contains(currentNameText.ToLower())) ||
 					    (currentCodeText.Length==0 && currentNameText.Length==0)) {
@@ -364,24 +384,32 @@ namespace ATC
 					}
 				}
 			} else {
-				if (GUILayout.Button("Request flight plan (low altitude airways)")) {
-					plan.type = FlightPlanType.LowAltitude;
-					plan.altitude = 5000;
-					planning = true;
-				}
-				if (GUILayout.Button("Request flight plan (high altitude airways)")) {
-					plan.type = FlightPlanType.HighAltitude;
-					plan.altitude = 20000;
-					planning = true;
-				}
-				if (GUILayout.Button("Request flight plan (suborbital hop)")) {
-					plan.type = FlightPlanType.Suborbital;
-					planning = true;
-				}
-				if (GUILayout.Button("Request flight plan (ascent to orbit)")) {
-					postMessage(section.name+", "+Callsign+" requests ascent to orbit.", true);
-					plan.type = FlightPlanType.Orbital;
-					startTimeout("SFP",500);
+				if (nearest_only) {
+					if (GUILayout.Button("Nearest airport list")) {
+						plan.type = FlightPlanType.LowAltitude;
+						plan.altitude = 5000;
+						planning = true;
+					}
+				} else {
+					if (GUILayout.Button("Request flight plan (low altitude airways)")) {
+						plan.type = FlightPlanType.LowAltitude;
+						plan.altitude = 5000;
+						planning = true;
+					}
+					if (GUILayout.Button("Request flight plan (high altitude airways)")) {
+						plan.type = FlightPlanType.HighAltitude;
+						plan.altitude = 20000;
+						planning = true;
+					}
+					if (GUILayout.Button("Request flight plan (suborbital hop)")) {
+						plan.type = FlightPlanType.Suborbital;
+						planning = true;
+					}
+					if (GUILayout.Button("Request flight plan (ascent to orbit)")) {
+						postMessage(section.name+", "+Callsign+" requests ascent to orbit.", true);
+						plan.type = FlightPlanType.Orbital;
+						startTimeout("SFP",500);
+					}
 				}
 
 			}
@@ -642,7 +670,7 @@ namespace ATC
 									}
 								}
 							}
-							if (plan.type != FlightPlanType.None && plan.type != FlightPlanType.Orbital) {
+							if (plan.type != FlightPlanType.None && plan.type != FlightPlanType.Orbital && !planning) {
 								if (plan.destination.distance()<10000 && plan.destination.tower != null) {
 									if (!transferring) {
 										postMessage(Callsign+", contact "+plan.destination.tower.name+" on "+plan.destination.tower.frequency+".", false);
@@ -658,7 +686,7 @@ namespace ATC
 										}
 									}
 								} else {
-									if (plan.type != FlightPlanType.Suborbital) {
+									if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
 										if (GUILayout.Button("Request cruising altitude increase")) {
 											postMessage(section.name+", "+Callsign+" would like to increase cruising altitude.", true);
 											startTimeout("NUL",200);
@@ -710,12 +738,14 @@ namespace ATC
 									}
 								}
 							}
-							if (plan.type != FlightPlanType.None) {
+							if (plan.type != FlightPlanType.None && !planning) {
 								if (GUILayout.Button("Cancel flight plan")) {
 									postMessage(section.name+", this is "+Callsign+", we’d like to cancel our flight plan.",true);
 									plan.type = FlightPlanType.None;
 									startTimeout("CFP", 300);
 								}
+							} else {
+								doFlightPlanGUI(true);
 							}
 						}
 					} else if (section.type == ATCclass.Central) {
@@ -790,7 +820,7 @@ namespace ATC
 											}
 										}
 									} else {
-										if (plan.type != FlightPlanType.None) {
+										if (plan.type != FlightPlanType.None && !planning) {
 											if (timer==0) {
 												if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
 													if (Math.Abs(RelativeHeading())>5) {
@@ -820,7 +850,7 @@ namespace ATC
 												startTimeout("CFP", 300);
 											}
 										} else {
-											doFlightPlanGUI();
+											doFlightPlanGUI(true);
 										}
 									}
 								}
@@ -971,12 +1001,28 @@ namespace ATC
 					postMessage (Callsign + ", continue on course.", false);
 				} else if (action == "CFP") {
 					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
+				} else if (action == "SFP") {
+					if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+						postMessage (Callsign + ", you have been filed for a flight to " + plan.destination.name + ", cruising altitude " + plan.altitude.ToString () + " meters.", false);
+					} else if (plan.type == FlightPlanType.Suborbital) {
+						postMessage (Callsign + ", you have been filed for an exo-atmospheric flight to " + plan.destination.name + ".", false);
+					} else if (plan.type == FlightPlanType.Orbital) {
+						postMessage (Callsign + ", you have been filed for an ascent to orbit.", false);
+					}
 				}
 			} else if (section.type == ATCclass.Central) {
 				if (action == "CON") {
 					postMessage (Callsign + ", continue on course.", false);
 				} else if (action == "CFP") {
 					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
+				} else if (action == "SFP") {
+					if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+						postMessage (Callsign + ", you have been filed for a flight to " + plan.destination.name + ", cruising altitude " + plan.altitude.ToString () + " meters.", false);
+					} else if (plan.type == FlightPlanType.Suborbital) {
+						postMessage (Callsign + ", you have been filed for an exo-atmospheric flight to " + plan.destination.name + ".", false);
+					} else if (plan.type == FlightPlanType.Orbital) {
+						postMessage (Callsign + ", you have been filed for an ascent to orbit.", false);
+					}
 				}
 			} else if (section.type == ATCclass.Space_Center) {
 				if (action == "RTC") {
@@ -997,6 +1043,14 @@ namespace ATC
 					postMessage (Callsign + ", " + section.name + ". Read you loud and clear.", false);
 				} else if (action == "CFP") {
 					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
+				} else if (action == "SFP") {
+					if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+						postMessage (Callsign + ", you have been filed for a flight to " + plan.destination.name + ", cruising altitude " + plan.altitude.ToString () + " meters.", false);
+					} else if (plan.type == FlightPlanType.Suborbital) {
+						postMessage (Callsign + ", you have been filed for an exo-atmospheric flight to " + plan.destination.name + ".", false);
+					} else if (plan.type == FlightPlanType.Orbital) {
+						postMessage (Callsign + ", you have been filed for an ascent to orbit.", false);
+					}
 				}
 			}
 		}

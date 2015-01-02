@@ -637,13 +637,13 @@ namespace ATC
 											postMessage(section.name+", "+Callsign+" would like to increase cruising altitude.", true);
 											startTimeout("NUL",200);
 											plan.altitude += 1000;
-											timer = 200;
+											timer = 1;
 										}
 										if (GUILayout.Button("Request cruising altitude decrease")) {
 											postMessage(section.name+", "+Callsign+" would like to decrease cruising altitude.", true);
 											startTimeout("NUL",200);
 											plan.altitude -= 1000;
-											timer = 200;
+											timer = 1;
 										}
 									}
 									if (timer==0) {

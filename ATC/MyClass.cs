@@ -341,7 +341,7 @@ namespace ATC
 					currentCodeText = currentCodeText.Substring(0,3);
 				}
 				foreach(Station s in airports) {
-					if ((currentCodeText.Length>0 && s.code.Contains(currentCodeText)) || (currentNameText.Length>0 && s.name.Contains(currentNameText))) {
+					if ((currentCodeText.Length>0 && s.code.Contains(currentCodeText)) || (currentNameText.Length>0 && s.name.ToLower().Contains(currentNameText.ToLower()))) {
 						if (GUILayout.Button(s.name+" ("+s.code+")")) {
 							plan.destination = s;
 							planning = false;

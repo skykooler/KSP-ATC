@@ -176,6 +176,7 @@ namespace ATC
 		private ConfigNode configFile;
 		private List<Station> stations = new List<Station>();
 		private List<Station> airports = new List<Station>();
+		public float glideAltitude;
 
 		private string currentNameText = "";
 		private string currentCodeText = "";
@@ -453,6 +454,9 @@ namespace ATC
 				Section approach = approachStation.approach;
 				Station centralStation = getCentral();
 				Section central = centralStation.central;
+				if (plan.destination != null) {
+					glideAltitude = Math.Max(((int)(plan.destination.distance()*0.1*0.001))*1000,1000);
+				}
 				if (ticksRemaining==0) {
 					if (section.type==ATCclass.Tower) {
 							if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
@@ -506,18 +510,18 @@ namespace ATC
 												if (timer==0) {
 													if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
 														if (Math.Abs(RelativeHeading())>5) {
-															if (plan.altitude - FlightGlobals.ActiveVessel.altitude > 300) {
-																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+plan.altitude+".", false);
-															} else if (plan.altitude - FlightGlobals.ActiveVessel.altitude < -300) {
-																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+plan.altitude+".", false);
+															if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+															} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 															} else {
 																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+".",false);
 															}
 														} else {
-															if (plan.altitude - FlightGlobals.ActiveVessel.altitude > 300) {
-																postMessage(Callsign+", climb and maintain "+plan.altitude+".", false);
-															} else if (plan.altitude - FlightGlobals.ActiveVessel.altitude < -300) {
-																postMessage(Callsign+", descend and maintain "+plan.altitude+".", false);
+															if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+																postMessage(Callsign+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+															} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+																postMessage(Callsign+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 															} else {
 															}
 														}
@@ -648,7 +652,7 @@ namespace ATC
 					} else if (section.type==ATCclass.Approach) {
 						if (!stationContacted) {
 							if (GUILayout.Button("Contact "+section.name)) {
-								string altTarget = (plan.type==FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) ? " for "+plan.altitude.ToString() : "";
+								string altTarget = (plan.type==FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) ? " for "+Math.Min(plan.altitude,glideAltitude).ToString() : "";
 								if (FlightGlobals.ActiveVessel.verticalSpeed>50) {
 									postMessage(section.name+", this is "+Callsign+", ascending through "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+altTarget+".",true);
 								} else if (FlightGlobals.ActiveVessel.verticalSpeed<-50) {
@@ -708,18 +712,18 @@ namespace ATC
 									if (timer==0) {
 										if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
 											if (Math.Abs(RelativeHeading())>5) {
-												if (plan.altitude - FlightGlobals.ActiveVessel.altitude > 300) {
-													postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+plan.altitude+".", false);
-												} else if (plan.altitude - FlightGlobals.ActiveVessel.altitude < -300) {
-													postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+plan.altitude+".", false);
+												if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+													postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+												} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+													postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 												} else {
 													postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+".",false);
 												}
 											} else {
-												if (plan.altitude - FlightGlobals.ActiveVessel.altitude > 300) {
-													postMessage(Callsign+", climb and maintain "+plan.altitude+".", false);
-												} else if (plan.altitude - FlightGlobals.ActiveVessel.altitude < -300) {
-													postMessage(Callsign+", descend and maintain "+plan.altitude+".", false);
+												if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+													postMessage(Callsign+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+												} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+													postMessage(Callsign+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 												} else {
 												}
 											}
@@ -829,18 +833,18 @@ namespace ATC
 											if (timer==0) {
 												if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
 													if (Math.Abs(RelativeHeading())>5) {
-														if (plan.altitude - FlightGlobals.ActiveVessel.altitude > 300) {
-															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+plan.altitude+".", false);
-														} else if (plan.altitude - FlightGlobals.ActiveVessel.altitude < -300) {
-															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+plan.altitude+".", false);
+														if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+														} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 														} else {
 															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+".",false);
 														}
 													} else {
-														if (plan.altitude - FlightGlobals.ActiveVessel.altitude > 300) {
-															postMessage(Callsign+", climb and maintain "+plan.altitude+".", false);
-														} else if (plan.altitude - FlightGlobals.ActiveVessel.altitude < -300) {
-															postMessage(Callsign+", descend and maintain "+plan.altitude+".", false);
+														if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+															postMessage(Callsign+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+														} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+															postMessage(Callsign+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 														} else {
 														}
 													}
@@ -977,7 +981,7 @@ namespace ATC
 					if (plan.type == FlightPlanType.None) {
 						postMessage (Callsign + ", cleared for takeoff.", false);
 					} else if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
-						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain " + plan.altitude.ToString () + " meters.", false);
+						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain " + Math.Min(plan.altitude,glideAltitude).ToString () + " meters.", false);
 					} else if (plan.type == FlightPlanType.Suborbital) {
 						postMessage (Callsign + ", cleared for takeoff and suborbital hop.", false);
 					} else if (plan.type == FlightPlanType.Orbital) {
@@ -1035,7 +1039,7 @@ namespace ATC
 					if (plan.type == FlightPlanType.None) {
 						postMessage (Callsign + ", cleared for takeoff.", false);
 					} else if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
-						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain " + plan.altitude.ToString () + " meters.", false);
+						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain " + Math.Min(plan.altitude,glideAltitude).ToString () + " meters.", false);
 					} else if (plan.type == FlightPlanType.Suborbital) {
 						postMessage (Callsign + ", cleared for takeoff and suborbital hop.", false);
 					} else if (plan.type == FlightPlanType.Orbital) {

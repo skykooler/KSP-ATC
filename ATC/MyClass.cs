@@ -285,6 +285,8 @@ namespace ATC
 
 		void OnGUI()
 		{
+			if (FlightGlobals.currentMainBody.name != "Kerbin")
+				return;
 			MainGUI = GUI.Window(windGUIID, MainGUI, OnWindow, "Messages");
 			yellowStyle = new GUIStyle(GUI.skin.label);
 			whiteStyle = new GUIStyle(GUI.skin.label);
@@ -838,7 +840,28 @@ namespace ATC
 								stationContacted = true;
 							}
 						} else {
-
+							if (!flightPermission) {
+								if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH) {
+									if (GUILayout.Button("Request launch clearance")) {
+										postMessage(section.name + ", " + Callsign + " here, request clearance for launch.", true);
+										flightPermission = true;
+										landingPermission = false;
+										timer = 700;
+										startTimeout("RLU", 250);
+									}
+								} else {
+									if (GUILayout.Button("Request takeoff clearance")) {
+										contactStation();
+										flightPermission = true;
+										landingPermission = false;
+										timer = 700;
+										startTimeout("RTC", 250);
+									}
+								}
+							}
+							if (station.ground==null && plan.type == FlightPlanType.None && !planning) {
+								doFlightPlanGUI();
+							}
 						}
 					}
 			    }
@@ -871,21 +894,21 @@ namespace ATC
 		void runAction(string action) {
 			if (section.type == ATCclass.Ground) {
 				if (action == "TTP") {
-					postMessage(Callsign+", taxi to parking.", false);
+					postMessage (Callsign + ", taxi to parking.", false);
 				} else if (action == "SFP") {
-					if (plan.type == FlightPlanType.LowAltitude || plan.type ==FlightPlanType.HighAltitude) {
-						postMessage(Callsign+", you have been filed for a flight to "+plan.destination.name+", cruising altitude "+plan.altitude.ToString()+" meters.", false);
+					if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+						postMessage (Callsign + ", you have been filed for a flight to " + plan.destination.name + ", cruising altitude " + plan.altitude.ToString () + " meters.", false);
 					} else if (plan.type == FlightPlanType.Suborbital) {
-						postMessage(Callsign+", you have been filed for an exo-atmospheric flight to "+plan.destination.name+".", false);
+						postMessage (Callsign + ", you have been filed for an exo-atmospheric flight to " + plan.destination.name + ".", false);
 					} else if (plan.type == FlightPlanType.Orbital) {
-						postMessage(Callsign+", you have been filed for an ascent to orbit.", false);
+						postMessage (Callsign + ", you have been filed for an ascent to orbit.", false);
 					}
 				} else if (action == "RCI") {
-					postMessage(Callsign + ", cruising altitude increased to "+plan.altitude, false);
+					postMessage (Callsign + ", cruising altitude increased to " + plan.altitude, false);
 				} else if (action == "RCD") {
-					postMessage(Callsign + ", cruising altitude decreased to "+plan.altitude, false);
+					postMessage (Callsign + ", cruising altitude decreased to " + plan.altitude, false);
 				} else if (action == "CFP") {
-					postMessage("Ok, "+Callsign+", we’ve cancelled your flight plan.", false);
+					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
 				}
 			} else if (section.type == ATCclass.Tower) {
 				if (action == "RTC") {
@@ -893,41 +916,61 @@ namespace ATC
 					if (plan.type == FlightPlanType.None) {
 						postMessage (Callsign + ", cleared for takeoff.", false);
 					} else if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
-						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain "+plan.altitude.ToString()+" meters.", false);
+						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain " + plan.altitude.ToString () + " meters.", false);
 					} else if (plan.type == FlightPlanType.Suborbital) {
-						postMessage(Callsign + ", cleared for takeoff and suborbital hop.", false);
+						postMessage (Callsign + ", cleared for takeoff and suborbital hop.", false);
 					} else if (plan.type == FlightPlanType.Orbital) {
-						postMessage(Callsign + ", cleared for takeoff and ascent to orbit.", false);
+						postMessage (Callsign + ", cleared for takeoff and ascent to orbit.", false);
 					}
 					// }
 				} else if (action == "CFP") {
-					postMessage("Ok, "+Callsign+", we’ve cancelled your flight plan.", false);
+					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
 				} else if (action == "RLC") {
-					postMessage(Callsign + ", cleared for landing, "+station.runway.name+".", false);
+					postMessage (Callsign + ", cleared for landing, " + station.runway.name + ".", false);
 				} else if (action == "RTG") {
-					postMessage(Callsign + ", cleared for touch-and-go, "+station.runway.name+".", false);
+					postMessage (Callsign + ", cleared for touch-and-go, " + station.runway.name + ".", false);
 				} else if (action == "AGA") {
-					postMessage(Callsign+", roger.", false);
+					postMessage (Callsign + ", roger.", false);
 				} else if (action == "CLI") {
-					postMessage(Callsign+", roger.", false);
-				} else if (action=="CON") {
+					postMessage (Callsign + ", roger.", false);
+				} else if (action == "CON") {
 					if (plan.type == FlightPlanType.None || plan.type == FlightPlanType.Orbital) {
-						postMessage(Callsign+", continue on course.", false);
+						postMessage (Callsign + ", continue on course.", false);
 					} else {
-						postMessage(Callsign+", roger. Head straight in, enter pattern for "+station.runway.name+".", false);
+						postMessage (Callsign + ", roger. Head straight in, enter pattern for " + station.runway.name + ".", false);
 					}
 				}
-			} else  if (section.type == ATCclass.Approach) {
-				if (action=="CON") {
-					postMessage(Callsign+", continue on course.", false);
+			} else if (section.type == ATCclass.Approach) {
+				if (action == "CON") {
+					postMessage (Callsign + ", continue on course.", false);
 				} else if (action == "CFP") {
-					postMessage("Ok, "+Callsign+", we’ve cancelled your flight plan.", false);
+					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
 				}
-			} else  if (section.type == ATCclass.Central) {
-				if (action=="CON") {
-					postMessage(Callsign+", continue on course.", false);
+			} else if (section.type == ATCclass.Central) {
+				if (action == "CON") {
+					postMessage (Callsign + ", continue on course.", false);
 				} else if (action == "CFP") {
-					postMessage("Ok, "+Callsign+", we’ve cancelled your flight plan.", false);
+					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
+				}
+			} else if (section.type == ATCclass.Space_Center) {
+				if (action == "RTC") {
+					// if (station.runway.isOnRunway()) {
+					if (plan.type == FlightPlanType.None) {
+						postMessage (Callsign + ", cleared for takeoff.", false);
+					} else if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+						postMessage (Callsign + ", cleared for takeoff. Fly runway heading, climb and maintain " + plan.altitude.ToString () + " meters.", false);
+					} else if (plan.type == FlightPlanType.Suborbital) {
+						postMessage (Callsign + ", cleared for takeoff and suborbital hop.", false);
+					} else if (plan.type == FlightPlanType.Orbital) {
+						postMessage (Callsign + ", cleared for takeoff and ascent to orbit.", false);
+					}
+					// }
+				} else if (action == "RLU") {
+					postMessage (Callsign + ", cleared for launch.", false);
+				} else if (action == "CON") {
+					postMessage (Callsign + ", " + section.name + ". Read you loud and clear.", false);
+				} else if (action == "CFP") {
+					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
 				}
 			}
 		}

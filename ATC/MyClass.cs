@@ -582,7 +582,7 @@ namespace ATC
 														startTimeout("RTG", 500);
 														landingPermission = true;
 													}
-													if (plan.type != FlightPlanType.None && station == plan.destination && station.distance() < 5000) {
+													if (plan.type != FlightPlanType.None && station == plan.destination && station.distance() < 3500) {
 														postMessage(Callsign + ", cleared for landing, "+((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name)+".", false);
 														startTimeout("NUL", 200);
 														landingPermission = true;

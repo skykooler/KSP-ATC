@@ -32,6 +32,8 @@ namespace ATC
 	}
 	public class Runway {
 		public string name;
+		public string altname = "";
+		public int heading = 0;
 		public float tllat;
 		public float tllon;
 		public float trlat;
@@ -212,6 +214,10 @@ namespace ATC
 					airports.Add (s);
 					s.runway = new Runway ();
 					s.runway.name = stationSettings.GetValue("runway");
+					if (stationSettings.HasValue("altrunway")) {
+						s.runway.altname = stationSettings.GetValue("altrunway");
+						s.runway.heading = int.Parse(stationSettings.GetValue("runwayheading"));
+					}
 				}
 				if (stationSettings.HasNode ("Tower")) {
 					ConfigNode tower = stationSettings.GetNode ("Tower");
@@ -479,6 +485,7 @@ namespace ATC
 				GUILayout.Label(message2, who2 ? whiteStyle : yellowStyle);
 				GUILayout.Label(message1, who1 ? whiteStyle : yellowStyle);
 
+
 //				GUILayout.Label("Lat: "+FlightGlobals.ActiveVessel.latitude.ToString());
 //				GUILayout.Label("Lon: "+FlightGlobals.ActiveVessel.longitude.ToString());
 				
@@ -576,7 +583,7 @@ namespace ATC
 														landingPermission = true;
 													}
 													if (plan.type != FlightPlanType.None && station == plan.destination && station.distance() < 5000) {
-														postMessage(Callsign + ", cleared for landing, "+station.runway.name+".", false);
+														postMessage(Callsign + ", cleared for landing, "+((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name)+".", false);
 														startTimeout("NUL", 200);
 														landingPermission = true;
 													}
@@ -1037,9 +1044,9 @@ namespace ATC
 				} else if (action == "CFP") {
 					postMessage ("Ok, " + Callsign + ", we’ve cancelled your flight plan.", false);
 				} else if (action == "RLC") {
-					postMessage (Callsign + ", cleared for landing, " + station.runway.name + ".", false);
+					postMessage (Callsign + ", cleared for landing, " + ((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name) + ".", false);
 				} else if (action == "RTG") {
-					postMessage (Callsign + ", cleared for touch-and-go, " + station.runway.name + ".", false);
+					postMessage (Callsign + ", cleared for touch-and-go, " + ((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name) + ".", false);
 				} else if (action == "AGA") {
 					postMessage (Callsign + ", roger.", false);
 				} else if (action == "CLI") {
@@ -1048,7 +1055,7 @@ namespace ATC
 					if (plan.type == FlightPlanType.None || plan.type == FlightPlanType.Orbital) {
 						postMessage (Callsign + ", continue on course.", false);
 					} else {
-						postMessage (Callsign + ", roger. Head straight in, enter pattern for " + station.runway.name + ".", false);
+						postMessage (Callsign + ", roger. Head straight in, enter pattern for " + ((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name) + ".", false);
 					}
 				}
 			} else if (section.type == ATCclass.Approach) {

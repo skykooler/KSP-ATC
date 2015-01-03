@@ -576,7 +576,7 @@ namespace ATC
 									doFlightPlanGUI();
 								}
 							}
-						if (plan.type != FlightPlanType.None) {
+						if (plan.type != FlightPlanType.None && plan.destination != null) {
 							if ((FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED ||
 							    FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED) && landingPermission && station == plan.destination) {
 								plan.type = FlightPlanType.None;
@@ -902,6 +902,10 @@ namespace ATC
 											transferring = false;
 											stationContacted = false;
 										}
+									}
+								} else if (FlightGlobals.ActiveVessel.altitude > 69200) {
+									if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING && plan.type == FlightPlanType.Orbital) {
+										plan.type = FlightPlanType.None;
 									}
 								}
 							}

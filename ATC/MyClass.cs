@@ -346,7 +346,7 @@ namespace ATC
 			} else {
 				statusString = "";
 			}
-			MainGUI = GUI.Window(windGUIID, MainGUI, OnWindow, section.name + "  " + statusString);
+			MainGUI = GUI.Window(windGUIID, MainGUI, OnWindow, section.frequency+" - ["+station.code+"] "+section.name + "  " + statusString);
 			yellowStyle = new GUIStyle(GUI.skin.label);
 			whiteStyle = new GUIStyle(GUI.skin.label);
 			yellowStyle.normal.textColor = yellowStyle.focused.textColor = Color.yellow;

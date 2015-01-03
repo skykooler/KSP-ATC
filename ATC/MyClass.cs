@@ -140,7 +140,7 @@ namespace ATC
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class MyClass : MonoBehaviour
 	{
-		private static Rect MainGUI = new Rect(100, 50, 400, 300);
+		private static Rect MainGUI = new Rect(100, 50, 450, 350);
 		public bool isWindowOpen = true; //Value for GUI window open
 		public double stationDistance;
 		public string Callsign = "NKSP";
@@ -180,6 +180,7 @@ namespace ATC
 
 		private string currentNameText = "";
 		private string currentCodeText = "";
+		private Vector2 scrollPosition = new Vector2 (0, 0);
 
 		private IComparer<Station> distanceComparer = new SortByDistance ();
 
@@ -404,6 +405,7 @@ namespace ATC
 					}
 				}
 				airports.Sort(distanceComparer);
+				scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 				foreach(Station s in airports) {
 					if (nearest_only && s.distance() > 250000) break;
 					if ((currentCodeText.Length>0 && s.code.Contains(currentCodeText)) ||
@@ -423,6 +425,7 @@ namespace ATC
 						}
 					}
 				}
+				GUILayout.EndScrollView();
 			} else {
 				if (nearest_only) {
 					if (GUILayout.Button("Nearest airport list")) {

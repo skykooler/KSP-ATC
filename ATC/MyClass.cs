@@ -300,7 +300,46 @@ namespace ATC
 		{
 			if (FlightGlobals.currentMainBody.name != "Kerbin")
 				return;
-			MainGUI = GUI.Window(windGUIID, MainGUI, OnWindow, "Messages");
+			
+			if (station == null) {
+				station = getTower ();
+				if (station.ground != null) {
+					section = station.ground;
+				} else {
+					section = station.tower;
+					stationContacted = true;
+				}
+			}
+
+			string statusString = "";
+			if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING && section.type == ATCclass.Tower && landingPermission) {
+				statusString = "<cleared for landing>";
+			} else if ((FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED || FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH) && section.type == ATCclass.Tower && flightPermission) {
+				statusString = "<cleared for takeoff>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING && (plan.type == FlightPlanType.LowAltitude ||
+			                                                                                plan.type == FlightPlanType.HighAltitude ||
+			                                                                                (plan.type == FlightPlanType.Suborbital && hasBeenToSpace && FlightGlobals.ActiveVessel.altitude < 50000)) && plan.destination != null) {
+				statusString = "<maintain " + Math.Min (plan.altitude, glideAltitude).ToString () + " heading " + plan.destination.heading ().ToString () + "°>";
+			} else if (plan.type == FlightPlanType.Suborbital) {
+				statusString = "<suborbital flight>";
+			} else if (plan.type == FlightPlanType.Orbital) {
+				statusString = "<ascend to orbit>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
+				statusString = "<flying>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED) {
+				statusString = "<landed>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED) {
+				statusString = "<splashed down>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SUB_ORBITAL) {
+				statusString = "<suborbital flight>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING || FlightGlobals.ActiveVessel.situation == Vessel.Situations.ESCAPING) {
+				statusString = "<orbiting>";
+			} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH) {
+				statusString = "<ready to launch>";
+			} else {
+				statusString = "";
+			}
+			MainGUI = GUI.Window(windGUIID, MainGUI, OnWindow, section.name + "  " + statusString);
 			yellowStyle = new GUIStyle(GUI.skin.label);
 			whiteStyle = new GUIStyle(GUI.skin.label);
 			yellowStyle.normal.textColor = yellowStyle.focused.textColor = Color.yellow;
@@ -419,15 +458,6 @@ namespace ATC
 
 		void OnWindow(int windowId)
 		{
-			if (station == null) {
-				station = getTower ();
-				if (station.ground != null) {
-					section = station.ground;
-				} else {
-					section = station.tower;
-					stationContacted = true;
-				}
-			}
 
 			if (ticksRemaining > 0) {
 				ticksRemaining--;

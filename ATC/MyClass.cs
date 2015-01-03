@@ -577,6 +577,10 @@ namespace ATC
 								}
 							}
 						if (plan.type != FlightPlanType.None) {
+							if ((FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED ||
+							    FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED) && landingPermission && station == plan.destination) {
+								plan.type = FlightPlanType.None;
+							}
 							if (GUILayout.Button("Cancel flight plan")) {
 								postMessage(section.name+", this is "+Callsign+", we’d like to cancel our flight plan.",true);
 								plan.type = FlightPlanType.None;

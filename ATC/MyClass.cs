@@ -622,9 +622,12 @@ namespace ATC
 						    FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED ||
 						    FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH ) {
 							if (station.ground != null) {
+								if (landingPermission) {
+									flightPermission = false;
+									landingPermission = false;
+								}
 								if (GUILayout.Button("Tune "+station.ground.name+" on "+station.ground.frequency.ToString())) {
 									section = station.ground;
-									landingPermission = false;
 								}
 							}
 						}

@@ -309,12 +309,31 @@ namespace ATC
 				return;
 			
 			if (station == null) {
-				station = getTower ();
-				if (station.ground != null) {
-					section = station.ground;
+				if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED || FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH || FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED) {
+					station = getTower ();
+					if (station.ground != null && station.distance() < 4000) {
+						section = station.ground;
+					} else {
+						section = station.tower;
+						stationContacted = true;
+					}
+				} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
+					flightPermission = true;
+					if (getTower().distance()<10000) {
+						station = getTower();
+						section = station.tower;
+					} else if (getApproach().distance()<30000 & FlightGlobals.ActiveVessel.altitude<15000) {
+						station = getApproach();
+						section = station.approach;
+					} else {
+						station = getCentral();
+						section = station.central;
+					}
 				} else {
-					section = station.tower;
-					stationContacted = true;
+					hasBeenToSpace = true;
+					flightPermission = true;
+					station = getSpaceCenter();
+					section = station.space_center;
 				}
 			}
 
@@ -389,6 +408,19 @@ namespace ATC
 				}
 			}
 			return central;
+		}
+		Station getSpaceCenter() {
+			double mindist = 12000000;
+			Station space_center = null;
+			foreach (Station s in stations) {
+				if (s.space_center != null) {
+					if (s.distance () < mindist) {
+						space_center = s;
+						mindist = s.distance ();
+					}
+				}
+			}
+			return space_center;
 		}
 
 		void doFlightPlanGUI (bool nearest_only = false) {
@@ -495,6 +527,8 @@ namespace ATC
 				Section approach = approachStation.approach;
 				Station centralStation = getCentral();
 				Section central = centralStation.central;
+				Station spaceCenterStation = getSpaceCenter();
+				Section spaceCenter = spaceCenterStation.space_center;
 				if (plan.destination != null) {
 					glideAltitude = Math.Max(((int)(plan.destination.distance()*0.1*0.001))*1000,1000);
 				}
@@ -932,25 +966,41 @@ namespace ATC
 								stationContacted = true;
 							}
 						} else {
-							if (hasBeenToSpace) {
-								flightPermission = true;
-								if (FlightGlobals.ActiveVessel.altitude < 50000) {
-									if (!transferring) {
-										postMessage(Callsign+", contact "+central.name+" on "+central.frequency+".", false);
-										startTimeout("NUL", 200);
-										transferring = true;
-									} else {
-										if (GUILayout.Button("Tune "+central.name+" on "+central.frequency.ToString())) {
-											postMessage("Going to "+central.frequency+", "+Callsign+".", true);
-											station = centralStation;
-											section = central;
-											transferring = false;
-											stationContacted = false;
-										}
+							if (spaceCenterStation != station) {
+								if (!transferring) {
+									postMessage(Callsign+", contact "+spaceCenter.name+" on "+spaceCenter.frequency+".", false);
+									startTimeout("NUL", 200);
+									transferring = true;
+								} else {
+									if (GUILayout.Button("Tune "+spaceCenter.name+" on "+spaceCenter.frequency.ToString())) {
+										postMessage("Going to "+spaceCenter.frequency+", "+Callsign+".", true);
+										station = spaceCenterStation;
+										section = spaceCenter;
+										transferring = false;
+										stationContacted = false;
 									}
-								} else if (FlightGlobals.ActiveVessel.altitude > 69200) {
-									if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING && plan.type == FlightPlanType.Orbital) {
-										plan.type = FlightPlanType.None;
+								}
+							} else {
+								if (hasBeenToSpace) {
+									flightPermission = true;
+									if (FlightGlobals.ActiveVessel.altitude < 50000) {
+										if (!transferring) {
+											postMessage(Callsign+", contact "+central.name+" on "+central.frequency+".", false);
+											startTimeout("NUL", 200);
+											transferring = true;
+										} else {
+											if (GUILayout.Button("Tune "+central.name+" on "+central.frequency.ToString())) {
+												postMessage("Going to "+central.frequency+", "+Callsign+".", true);
+												station = centralStation;
+												section = central;
+												transferring = false;
+												stationContacted = false;
+											}
+										}
+									} else if (FlightGlobals.ActiveVessel.altitude > 69200) {
+										if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING && plan.type == FlightPlanType.Orbital) {
+											plan.type = FlightPlanType.None;
+										}
 									}
 								}
 							}

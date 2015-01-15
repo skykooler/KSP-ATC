@@ -534,123 +534,125 @@ namespace ATC
 				}
 				if (ticksRemaining==0) {
 					if (section.type==ATCclass.Tower) {
-							if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
-								if (!flightPermission) {
-									postMessage(Callsign+", you were not cleared to take off.", false);
+						if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
+							if (!flightPermission) {
+								postMessage(Callsign+", you were not cleared to take off.", false);
+								if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
 									Reputation.Instance.AddReputation(-50,TransactionReasons.Any);
-									flightPermission = true;
-								} else {
-									if (station.distance()>10100) {
-										if (approachStation.distance()>30000 || FlightGlobals.ActiveVessel.altitude>15000) {
-											if (!transferring) {
-												postMessage(Callsign+", contact "+central.name+" on "+central.frequency+".", false);
-												startTimeout("NUL", 200);
-												transferring = true;
-											} else {
-												if (GUILayout.Button("Tune "+central.name+" on "+central.frequency.ToString())) {
-													postMessage("Going to "+central.frequency+", "+Callsign+".", true);
-													section = central;
-													transferring = false;
-													stationContacted = false;
-												}
-											}
+								}
+								flightPermission = true;
+							} else {
+								if (station.distance()>10100) {
+									if (approachStation.distance()>30000 || FlightGlobals.ActiveVessel.altitude>15000) {
+										if (!transferring) {
+											postMessage(Callsign+", contact "+central.name+" on "+central.frequency+".", false);
+											startTimeout("NUL", 200);
+											transferring = true;
 										} else {
-											if (!transferring) {
-												postMessage(Callsign+", contact "+approach.name+" on "+approach.frequency+".", false);
-												startTimeout("NUL", 200);
-												transferring = true;
-											} else {
-												if (GUILayout.Button("Tune "+approach.name+" on "+approach.frequency.ToString())) {
-													station = approachStation;
-													section = approach;
-													postMessage("Going to "+approach.frequency+", "+Callsign+".", true);
-													transferring = false;
-													stationContacted = false;
-												}
+											if (GUILayout.Button("Tune "+central.name+" on "+central.frequency.ToString())) {
+												postMessage("Going to "+central.frequency+", "+Callsign+".", true);
+												section = central;
+												transferring = false;
+												stationContacted = false;
 											}
 										}
 									} else {
-										if (!stationContacted) {
-											if (GUILayout.Button("Contact "+section.name)) {
-												if (!(plan.type == FlightPlanType.None || plan.type == FlightPlanType.Orbital) && station==plan.destination) {
-													postMessage(section.name+", "+Callsign+" is "+((int)((station.distance()+500)/1000)).ToString()+" kilometers "+station.direction()+", inbound for landing.", true);
-												} else {
-													postMessage(section.name+", this is "+Callsign+" with you, "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+".",true);
-												}
-												startTimeout("CON", 500);
-												stationContacted = true;
-											}
+										if (!transferring) {
+											postMessage(Callsign+", contact "+approach.name+" on "+approach.frequency+".", false);
+											startTimeout("NUL", 200);
+											transferring = true;
 										} else {
-											if (!landingPermission) {
-												if (timer==0) {
-													if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude || (plan.type == FlightPlanType.Suborbital && hasBeenToSpace)) {
-														if (Math.Abs(RelativeHeading())>5) {
-															if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
-																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
-															} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
-																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
-															} else {
-																postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+".",false);
-															}
+											if (GUILayout.Button("Tune "+approach.name+" on "+approach.frequency.ToString())) {
+												station = approachStation;
+												section = approach;
+												postMessage("Going to "+approach.frequency+", "+Callsign+".", true);
+												transferring = false;
+												stationContacted = false;
+											}
+										}
+									}
+								} else {
+									if (!stationContacted) {
+										if (GUILayout.Button("Contact "+section.name)) {
+											if (!(plan.type == FlightPlanType.None || plan.type == FlightPlanType.Orbital) && station==plan.destination) {
+												postMessage(section.name+", "+Callsign+" is "+((int)((station.distance()+500)/1000)).ToString()+" kilometers "+station.direction()+", inbound for landing.", true);
+											} else {
+												postMessage(section.name+", this is "+Callsign+" with you, "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+".",true);
+											}
+											startTimeout("CON", 500);
+											stationContacted = true;
+										}
+									} else {
+										if (!landingPermission) {
+											if (timer==0) {
+												if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude || (plan.type == FlightPlanType.Suborbital && hasBeenToSpace)) {
+													if (Math.Abs(RelativeHeading())>5) {
+														if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+														} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
 														} else {
-															if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
-																postMessage(Callsign+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
-															} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
-																postMessage(Callsign+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
-															} else {
-															}
+															postMessage(Callsign+", turn "+(RelativeHeading()>0?"right":"left")+" heading "+plan.destination.heading().ToString()+".",false);
+														}
+													} else {
+														if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude > 300) {
+															postMessage(Callsign+", climb and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+														} else if (Math.Min(plan.altitude,glideAltitude) - FlightGlobals.ActiveVessel.altitude < -300) {
+															postMessage(Callsign+", descend and maintain "+Math.Min(plan.altitude,glideAltitude)+".", false);
+														} else {
 														}
 													}
-													timer = 3000;
-												} else {
-													timer -= 1;
 												}
-												if (plan.type == FlightPlanType.None || station == plan.destination ) {
-													if (GUILayout.Button("Request landing clearance")) {
-														postMessage(section.name+", "+Callsign+" is inbound at "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+", request clearance for landing.", true);
-														startTimeout("RLC", 500);
-														landingPermission = true;
-													}
-													if (GUILayout.Button("Request landing clearance (remain in pattern)")) {
-														postMessage(section.name+", "+Callsign+" is inbound at "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+", request clearance for touch-and-go.", true);
-														startTimeout("RTG", 500);
-														landingPermission = true;
-													}
-													if (plan.type != FlightPlanType.None && station == plan.destination && station.distance() < 3500) {
-														postMessage(Callsign + ", cleared for landing, "+((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name)+".", false);
-														startTimeout("NUL", 200);
-														landingPermission = true;
-													}
-												}
+												timer = 3000;
 											} else {
-												if (GUILayout.Button("Announce go-around")) {
-													postMessage(section.name+", "+Callsign+" is going around.", true);
-													startTimeout("AGA", 200);
+												timer -= 1;
+											}
+											if (plan.type == FlightPlanType.None || station == plan.destination ) {
+												if (GUILayout.Button("Request landing clearance")) {
+													postMessage(section.name+", "+Callsign+" is inbound at "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+", request clearance for landing.", true);
+													startTimeout("RLC", 500);
+													landingPermission = true;
 												}
-												if (GUILayout.Button("Cancel landing intentions")) {
-													postMessage(section.name+", "+Callsign+" is diverting.", true);
-													landingPermission = false;
-													plan.type = FlightPlanType.None;
-													startTimeout("CLI", 200);
+												if (GUILayout.Button("Request landing clearance (remain in pattern)")) {
+													postMessage(section.name+", "+Callsign+" is inbound at "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+", request clearance for touch-and-go.", true);
+													startTimeout("RTG", 500);
+													landingPermission = true;
 												}
+												if (plan.type != FlightPlanType.None && station == plan.destination && station.distance() < 3500) {
+													postMessage(Callsign + ", cleared for landing, "+((station.runway.altname!="" && (station.heading()-station.runway.heading+630)%360<180)?station.runway.altname:station.runway.name)+".", false);
+													startTimeout("NUL", 200);
+													landingPermission = true;
+												}
+											}
+										} else {
+											if (GUILayout.Button("Announce go-around")) {
+												postMessage(section.name+", "+Callsign+" is going around.", true);
+												startTimeout("AGA", 200);
+											}
+											if (GUILayout.Button("Cancel landing intentions")) {
+												postMessage(section.name+", "+Callsign+" is diverting.", true);
+												landingPermission = false;
+												plan.type = FlightPlanType.None;
+												startTimeout("CLI", 200);
 											}
 										}
 									}
 								}
-							} else {
-								if (!flightPermission) {
-									if (GUILayout.Button("Request takeoff clearance")) {
-										contactStation();
-										flightPermission = true;
-										landingPermission = false;
-										timer = 700;
-										startTimeout("RTC", 250);
-									}
-								}
-								if (station.ground==null && plan.type == FlightPlanType.None && !planning) {
-									doFlightPlanGUI();
+							}
+						} else {
+							if (!flightPermission) {
+								if (GUILayout.Button("Request takeoff clearance")) {
+									contactStation();
+									flightPermission = true;
+									landingPermission = false;
+									timer = 700;
+									startTimeout("RTC", 250);
 								}
 							}
+							if (station.ground==null && plan.type == FlightPlanType.None && !planning) {
+								doFlightPlanGUI();
+							}
+						}
 						if (plan.type != FlightPlanType.None && plan.destination != null) {
 							if ((FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED ||
 							    FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED) && landingPermission && station == plan.destination) {
@@ -687,7 +689,9 @@ namespace ATC
 										}
 									} else if (FlightGlobals.ActiveVessel.situation==Vessel.Situations.FLYING && FlightGlobals.ActiveVessel.srfSpeed > 10 && flightPermission==false) {
 										postMessage(Callsign+", you were not cleared to take off.", false);
-										Reputation.Instance.AddReputation(-50,TransactionReasons.Any);
+										if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
+											Reputation.Instance.AddReputation(-50,TransactionReasons.Any);
+										}
 										flightPermission = true;
 									}
 								}
@@ -1015,7 +1019,9 @@ namespace ATC
 									}
 								} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.FLYING) {
 									postMessage(Callsign+", you were not cleared to take off.", false);
-									Reputation.Instance.AddReputation(-50,TransactionReasons.Any);
+									if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
+										Reputation.Instance.AddReputation(-50,TransactionReasons.Any);
+									}
 									flightPermission = true;
 								} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED) {
 									if (GUILayout.Button("Request takeoff clearance")) {

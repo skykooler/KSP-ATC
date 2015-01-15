@@ -305,7 +305,7 @@ namespace ATC
 
 		void OnGUI()
 		{
-			if (FlightGlobals.currentMainBody.name != "Kerbin")
+			if (FlightGlobals.currentMainBody.name != "Kerbin" || FlightGlobals.ActiveVessel.GetCrewCount() < 1)
 				return;
 			
 			if (station == null) {

@@ -186,6 +186,8 @@ namespace ATC
 
 		private IComparer<Station> distanceComparer = new SortByDistance ();
 
+		private static ApplicationLauncherButton btnLauncher;
+
 		int windGUIID;
 
 		void Awake()
@@ -201,6 +203,8 @@ namespace ATC
 //			island.latitude = -1.5226;
 //			island.longitude = 288.0881;
 //			airports.Add (island);
+
+			GameEvents.onGUIApplicationLauncherReady.Add(this.OnAppLauncherReady);
 
 			configFile = ConfigNode.Load (KSPUtil.ApplicationRootPath + "GameData/ATC/stations.cfg");
 
@@ -302,6 +306,32 @@ namespace ATC
 //				stationContacted = true;
 //			}
 		}
+
+		void OnDestroy()
+		{
+			if (btnLauncher != null)
+				ApplicationLauncher.Instance.RemoveModApplication(btnLauncher);
+			btnLauncher = null;
+		}
+
+		void OnAppLauncherReady() {
+			GameEvents.onGUIApplicationLauncherReady.Remove(this.OnAppLauncherReady);
+			btnLauncher = ApplicationLauncher.Instance.AddModApplication(OnDisplay, OnUnDisplay,
+			                                                             null, null, null, null,
+			                                                             ApplicationLauncher.AppScenes.ALWAYS,
+			                                                             GameDatabase.Instance.GetTexture("ATC/Media/LauncherIcon", false));
+			
+			btnLauncher.SetTrue(false);
+		}
+
+		void OnDisplay() {
+			isWindowOpen = true;
+		}
+
+		void OnUnDisplay() {
+			isWindowOpen = false;
+		}
+
 
 		void OnGUI()
 		{
@@ -499,8 +529,10 @@ namespace ATC
 
 		void OnWindow(int windowId)
 		{
-			if (GUI.Button (new Rect (MainGUI.width - 16, 2, 14, 14), ""))
+			if (GUI.Button (new Rect (MainGUI.width - 16, 2, 14, 14), "")) {
 				isWindowOpen = false;
+				btnLauncher.SetFalse();
+			}
 
 			if (ticksRemaining > 0) {
 				ticksRemaining--;

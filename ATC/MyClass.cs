@@ -703,35 +703,37 @@ namespace ATC
 								}
 							}
 						}
-						if (plan.type == FlightPlanType.None || planning) {
-							doFlightPlanGUI();
-						} else {
-							if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
-								if (GUILayout.Button("Request cruising altitude increase")) {
-									postMessage(section.name+", "+Callsign+" would like to increase cruising altitude.", true);
-									startTimeout("RCI",200);
-									plan.altitude += 1000;
+						if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.LANDED || FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH || FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED) {
+							if (plan.type == FlightPlanType.None || planning) {
+								doFlightPlanGUI();
+							} else {
+								if (plan.type == FlightPlanType.LowAltitude || plan.type == FlightPlanType.HighAltitude) {
+									if (GUILayout.Button("Request cruising altitude increase")) {
+										postMessage(section.name+", "+Callsign+" would like to increase cruising altitude.", true);
+										startTimeout("RCI",200);
+										plan.altitude += 1000;
+									}
+									if (GUILayout.Button("Request cruising altitude decrease")) {
+										postMessage(section.name+", "+Callsign+" would like to decrease cruising altitude.", true);
+										startTimeout("RCD",200);
+										plan.altitude -= 1000;
+									}
 								}
-								if (GUILayout.Button("Request cruising altitude decrease")) {
-									postMessage(section.name+", "+Callsign+" would like to decrease cruising altitude.", true);
-									startTimeout("RCD",200);
-									plan.altitude -= 1000;
+								if (GUILayout.Button("Cancel flight plan")) {
+									postMessage(section.name+", this is "+Callsign+", we’d like to cancel our flight plan.",true);
+									plan.type = FlightPlanType.None;
+									startTimeout("CFP", 300);
 								}
 							}
-							if (GUILayout.Button("Cancel flight plan")) {
-								postMessage(section.name+", this is "+Callsign+", we’d like to cancel our flight plan.",true);
-								plan.type = FlightPlanType.None;
-								startTimeout("CFP", 300);
-							}
-						}
-						if (!planning) {
-							if (GUILayout.Button("Request taxi to parking")) {
-								postMessage(section.name+", "+Callsign+". Request taxi to parking.", true);
-								startTimeout("TTP", 300);
-							}
-							if (!station.runway.isOnRunway(FlightGlobals.ActiveVessel.latitude, FlightGlobals.ActiveVessel.longitude)) {
-								if (GUILayout.Button("Request taxi to runway")) {
-									
+							if (!planning) {
+								if (GUILayout.Button("Request taxi to parking")) {
+									postMessage(section.name+", "+Callsign+". Request taxi to parking.", true);
+									startTimeout("TTP", 300);
+								}
+								if (!station.runway.isOnRunway(FlightGlobals.ActiveVessel.latitude, FlightGlobals.ActiveVessel.longitude)) {
+									if (GUILayout.Button("Request taxi to runway")) {
+										
+									}
 								}
 							}
 						}

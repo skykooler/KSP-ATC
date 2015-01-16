@@ -305,7 +305,7 @@ namespace ATC
 
 		void OnGUI()
 		{
-			if (FlightGlobals.currentMainBody.name != "Kerbin" || FlightGlobals.ActiveVessel.GetCrewCount() < 1)
+			if (FlightGlobals.currentMainBody.name != "Kerbin" || FlightGlobals.ActiveVessel.GetCrewCount() < 1 || !isWindowOpen)
 				return;
 			
 			if (station == null) {
@@ -499,6 +499,8 @@ namespace ATC
 
 		void OnWindow(int windowId)
 		{
+			if (GUI.Button (new Rect (MainGUI.width - 16, 2, 14, 14), ""))
+				isWindowOpen = false;
 
 			if (ticksRemaining > 0) {
 				ticksRemaining--;

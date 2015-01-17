@@ -999,6 +999,10 @@ namespace ATC
 									} else {
 										postMessage(section.name+", this is "+Callsign+" with you, "+(1000*(int)((FlightGlobals.ActiveVessel.altitude+500)/1000)).ToString()+".",true);
 									}
+								} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SUB_ORBITAL) {
+									postMessage (section.name+", "+Callsign+" is suborbital, apoapsis "+(int)((FlightGlobals.ActiveVessel.orbit.ApA+500)/1000)+" kilometers.",true);
+								} else if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING) {
+									postMessage(section.name+", "+Callsign+" is in orbit of Kerbin, periapsis "+(int)((FlightGlobals.ActiveVessel.orbit.PeA+500)/1000)+" kilometers.", true);
 								} else {
 									postMessage (section.name+", this is "+Callsign+".", true);
 								}

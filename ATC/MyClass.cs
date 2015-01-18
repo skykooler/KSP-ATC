@@ -1073,7 +1073,9 @@ namespace ATC
 									}
 								}
 							}
-							if (station.ground==null && plan.type == FlightPlanType.None && !planning) {
+							if (station.ground==null && plan.type == FlightPlanType.None && !planning && FlightGlobals.ActiveVessel.situation != Vessel.Situations.SUB_ORBITAL &&
+							    																		 FlightGlobals.ActiveVessel.situation != Vessel.Situations.ORBITING &&
+							    																		 FlightGlobals.ActiveVessel.situation != Vessel.Situations.ESCAPING) {
 								doFlightPlanGUI();
 							}
 						}
